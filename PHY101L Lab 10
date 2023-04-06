@@ -1,0 +1,46 @@
+Web VPython 3.2
+from visual import *
+
+N = 11 # N of atoms in set
+spacing = 1 # distance between atoms
+atom_radius = 0.25*spacing # radius of atom
+scene.center = 0.5*(N-1)*vector(1,0,0) # center the scene on the middle atom
+m = 1 # mass of atom
+k = 1 # spring constant
+
+class Set:
+    def __init__(self, N, atom_radius, spacing, m, k):
+        self.atoms = [] # defines list storing the objects
+        for x in range(0, N, 1): # loop defining objects ... spheres as atoms
+            atom = sphere(radius=atom_radius, color=color.red) # all atoms same radius and color
+            atom.pos = vector(x, 0, 0)*spacing # initial position of an atom on x-axis
+            atom.v = vector(0, 0, 0) # initial velocity of an atom
+            atom.m = m # mass of an atom
+            self.atoms.append(atom) # add each atom to the list
+        self.k = k # spring constant
+        self.spacing = spacing # distance between atoms
+        self.N = N # number of atoms in set
+
+    def calculate_force(self, i):
+        force = vector(0, 0, 0)
+        # force from left neighbor
+        if i > 0:
+            displacement = self.atoms[i].pos - self.atoms[i-1].pos
+            force += -self.k * displacement.norm() * (displacement.mag - self.spacing)
+        # force from right neighbor
+        if i < self.N-1:
+            displacement = self.atoms[i+1].pos - self.atoms[i].pos
+            force += self.k * displacement.norm() * (displacement.mag - self.spacing)
+        return force
+
+c = Set(N, atom_radius, spacing, m, k) # create an instance of the Set class
+dt = 0.005 # time step
+t = 0 # time
+
+while t < 1000: # time loop
+    rate(100)
+    for i in range(1, N-1): # updating position and velocity for each non-fixed atom
+        c.atoms[i].force = c.calculate_force(i)
+        c.atoms[i].v += c.atoms[i].force / c.atoms[i].m * dt
+        c.atoms[i].pos += c.atoms[i].v * dt
+    t += dt
